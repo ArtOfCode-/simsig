@@ -19,7 +19,8 @@ class SimSig
     @area_config = parse_area_config
 
     @crossing_config = @area_config['crossings']
-    @crossing_triggers = @crossing_config.values.flatten
+    @lower_triggers = @crossing_config.map { |id, config| config['lower'] }.flatten
+    @raise_triggers = @crossing_config.map { |id, config| config['raise'] }.flatten
 
     conn = parse_connection_info
     @stomp = Stomp::Client.new(conn)
@@ -112,29 +113,59 @@ class SimSig
     @stomp.publish('/topic/TD_ALL_SIG_AREA', JSON.dump({ crossingrequest: { crossing: id, operation: 'lower' } }))
   end
 
+  def raise_crossing(id)
+    @stomp.publish('/topic/TD_ALL_SIG_AREA', JSON.dump({ crossingrequest: { crossing: id, operation: 'raise' } }))
+  end
+
   def process_message(msg)
     raw = JSON.parse(msg.body)
     key = raw.keys[0]
     data = raw[key]
     @logger.debug "#{parse_time data['time']}: #{key} #{data}"
 
-    if key == 'train_location' && @crossing_triggers.include?(data['location'])
-      @crossing_config.each do |crossing_id, triggers|
-        if triggers.include?(data['location'])
-          @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} triggered at #{data['location']}"
-          if @area_config['mode'] == 'control'
-            lower_crossing crossing_id
+    if key == 'train_location'
+      if @lower_triggers.include?(data['location'])
+        @crossing_config.each do |crossing_id, config|
+          triggers = config['lower']
+          if triggers.include?(data['location'])
+            @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} triggered at signal #{data['location']}"
+            if @area_config['mode'] == 'control'
+              lower_crossing crossing_id
+            end
+          end
+        end
+      elsif @raise_triggers.include?(data['location'])
+        @crossing_config.each do |crossing_id, config|
+          triggers = config['raise']
+          if triggers.include?(data['location'])
+            @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} cleared at signal #{data['location']}"
+            if @area_config['mode'] == 'control'
+              raise_crossing crossing_id
+            end
           end
         end
       end
     end
 
-    if key == 'SG_MSG' && data['obj_type'] == 'route' && data['is_set'] == 'True' && @crossing_triggers.include?(data['obj_id'])
-      @crossing_config.each do |crossing_id, triggers|
-        if triggers.include?(data['obj_id'])
-          @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} triggered by route #{data['obj_id']}"
-          if @area_config['mode'] == 'control'
-            lower_crossing crossing_id
+    if key == 'SG_MSG' && data['obj_type'] == 'route' && data['is_set'] == 'True'
+      if @lower_triggers.include?(data['obj_id'])
+        @crossing_config.each do |crossing_id, config|
+          triggers = config['lower']
+          if triggers.include?(data['obj_id'])
+            @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} triggered by route #{data['obj_id']}"
+            if @area_config['mode'] == 'control'
+              lower_crossing crossing_id
+            end
+          end
+        end
+      elsif @raise_triggers.include?(data['obj_id'])
+        @crossing_config.each do |crossing_id, config|
+          triggers = config['raise']
+          if triggers.include?(data['obj_id'])
+            @logger.info "#{parse_time(data['time'])}: Crossing #{crossing_id} cleared by route #{data['obj_id']}"
+            if @area_config['mode'] == 'control'
+              raise_crossing crossing_id
+            end
           end
         end
       end

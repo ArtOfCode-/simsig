@@ -1,23 +1,36 @@
 mode: control
 crossings:
   GDENABY:
-    - S862
-    - S706
-    - S883
+    lower:
+      - S862
+      - S706
+      - S883
+    raise: auto
   GDODWORTH:
-    - RBY1045AM
-    - RBY1046AM
+    lower:
+      - RBY1045AM
+      - RBY1046AM
+    raise: auto
   GBARNSLEY:
-    - RBY1029AM
-    - RBY1038AM
-    - RBY1070AM
+    lower:
+      - SBY1027
+      - RBY1032AM
+      - RBY1038AM
+      - RBY1070AM
+      - RBY1030AM
+    raise: auto
   GHOLMES:
-    - S749
-    - R1066_1
-    - R218_1M
-    - R213_2M
-    - R213_1M
-    - R1064
+    lower:
+      - S749
+      - R1066_1
+      - R218_1M
+      - R213_1M
+      - R213_2M
+      - R213_3M
+      - R1064
+    raise: auto
   GBEIGHTON:
-    - RBX33AM
-    - RBX7
+    lower:
+      - RBX33AM
+      - RBX7
+    raise: auto

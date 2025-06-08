@@ -1,0 +1,9 @@
+mode: control
+crossings:
+  G57: # Furness Vale
+    lower:
+      - SFV22
+      - SFV5
+    raise:
+      - SFV20
+      - SFV8
