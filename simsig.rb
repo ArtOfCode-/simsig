@@ -23,7 +23,7 @@ class SimSig
 
     conn = parse_connection_info
     @stomp = Stomp::Client.new(conn)
-    @logger.info "Connected to Information Gateway on #{conn[:hosts][0][:host]}:#{conn[:hosts][0][:port]}"
+    @logger.info "Connected to Interface Gateway on #{conn[:hosts][0][:host]}:#{conn[:hosts][0][:port]}"
   end
 
   def parse_options
